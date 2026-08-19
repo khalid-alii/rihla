@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rihla — commute together</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F4EF;
+    --surface:#FFFFFF;
+    --ink:#1C2430;
+    --ink-soft:#3B4452;
+    --accent:#E8871E;
+    --accent-ink:#1C2430;
+    --pine:#2F6F5E;
+    --pine-ink:#EAF3F0;
+    --line:#DDD6C9;
+    --muted:#8B8478;
+    --danger:#B3432B;
+    --radius:14px;
+    --shadow: 0 1px 2px rgba(28,36,48,0.04), 0 8px 24px rgba(28,36,48,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .mono{
+    font-family:'IBM Plex Mono',monospace;
+  }
+  button{font-family:inherit;cursor:pointer;}
+  input,textarea{font-family:inherit;}
+  a{color:inherit;}
+  ::selection{background:var(--accent);color:var(--accent-ink);}
+
+  /* ---------- route mark (signature element) ---------- */
+  .route-mark{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    flex-shrink:0;
+  }
+  .route-mark .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--ink);
+  }
+  .route-mark .dot.origin{background:var(--accent);}
+  .route-mark .dash{
+    width:22px;height:0;border-top:2px dashed var(--line);
+  }
+  .route-mark .dot.dest{
+    width:9px;height:9px;border-radius:50%;
+    background:transparent;border:2px solid var(--pine);
+  }
+  .logo-mark{width:16px;height:16px;border-radius:50%;background:var(--accent);position:relative;flex-shrink:0;}
+  .logo-mark::after{
+    content:"";position:absolute;left:100%;top:50%;transform:translateY(-50%);
+    width:14px;height:0;border-top:2px dashed var(--ink);
+  }
+
+  /* ---------- focus ---------- */
+  button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--pine);
+    outline-offset:2px;
+  }
+
+  /* ================= AUTH VIEW ================= */
+  #auth-view{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(232,135,30,0.10), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(47,111,94,0.10), transparent 40%),
+      var(--bg);
+    padding:40px 20px;
+  }
+  .auth-shell{
+    width:100%;
+    max-width:920px;
+    min-height:560px;
+    background:var(--surface);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .auth-side{
+    background:var(--ink);
+    color:#F6F4EF;
+    padding:48px 40px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    position:relative;
+    overflow:hidden;
+  }
+  .auth-side .route-line-deco{
+    position:absolute;
+    right:-40px;
+    bottom:-40px;
+    width:260px;
+    height:260px;
+    border-radius:50%;
+    border:2px dashed rgba(246,244,239,0.15);
+  }
+  .auth-brand{display:flex;align-items:center;gap:10px;}
+  .auth-brand .logo-mark{background:var(--accent);}
+  .auth-brand .logo-mark::after{border-top:2px dashed rgba(246,244,239,0.5);}
+  .auth-brand span{font-family:'Bricolage Grotesque';font-weight:700;font-size:20px;}
+  .auth-side h2{font-size:28px;line-height:1.25;max-width:280px;color:#fff;}
+  .auth-side p{color:#B9BFC9;font-size:14px;line-height:1.6;max-width:260px;}
+  .auth-side .tag{
+    font-family:'IBM Plex Mono';
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  .auth-form-col{
+    padding:48px 44px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .auth-form-col h1{font-size:26px;margin-bottom:6px;}
+  .auth-form-col .sub{color:var(--muted);font-size:14px;margin-bottom:28px;}
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;font-size:12px;font-weight:600;color:var(--ink-soft);
+    margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;
+  }
+  .field input, .field textarea{
+    width:100%;padding:12px 14px;border-radius:10px;
+    border:1.5px solid var(--line);background:#FCFBF8;
+    font-size:14.5px;color:var(--ink);transition:border-color .15s;
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--accent);outline:none;}
+  .field.error input{border-color:var(--danger);}
+  .error-msg{color:var(--danger);font-size:12.5px;margin-top:6px;display:none;}
+  .field.error .error-msg{display:block;}
+
+  .btn{
+    border:none;border-radius:10px;padding:12px 20px;
+    font-size:14.5px;font-weight:600;transition:transform .1s, opacity .15s;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--accent);color:var(--accent-ink);}
+  .btn-primary:hover{opacity:0.92;}
+  .btn-primary:disabled{background:#E8E3D8;color:#A9A292;cursor:not-allowed;}
+  .btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-outline:hover{border-color:var(--ink);}
+  .btn-block{width:100%;}
+  .toggle-link{
+    text-align:center;font-size:13.5px;color:var(--muted);margin-top:18px;
+  }
+  .toggle-link button{background:none;border:none;color:var(--pine);font-weight:600;text-decoration:underline;font-size:13.5px;padding:0;}
+
+  .hidden{display:none !important;}
+
+  /* ================= APP SHELL ================= */
+  #app-view{
+    display:none;
+    min-height:100vh;
+  }
+  #app-view.active{display:flex;}
+  .sidebar{
+    width:250px;
+    flex-shrink:0;
+    background:var(--ink);
+    color:#F6F4EF;
+    display:flex;
+    flex-direction:column;
+    padding:26px 20px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:6px 6px 30px 6px;}
+  .sidebar-brand span{font-family:'Bricolage Grotesque';font-weight:700;font-size:19px;}
+  .sidebar-brand .logo-mark::after{border-top:2px dashed rgba(246,244,239,0.5);}
+  .community-pill{
+    font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:0.08em;
+    color:var(--accent);text-transform:uppercase;margin:-20px 0 22px 6px;
+  }
+  .nav-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;flex:1;}
+  .nav-item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 12px;border-radius:10px;
+    color:#C4C9D2;font-size:14.5px;font-weight:500;
+    background:none;border:none;text-align:left;width:100%;
+    transition:background .15s, color .15s;
+  }
+  .nav-item svg{flex-shrink:0;opacity:0.85;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
+  .nav-item.active{background:var(--accent);color:var(--accent-ink);font-weight:600;}
+  .nav-item.active svg{opacity:1;}
+  .sidebar-footer{
+    border-top:1px solid rgba(255,255,255,0.1);
+    padding-top:16px;margin-top:10px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .avatar{
+    width:36px;height:36px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),#F2B25C);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bricolage Grotesque';font-weight:700;color:var(--ink);font-size:14px;
+    flex-shrink:0;
+  }
+  .sidebar-footer .who{font-size:13.5px;font-weight:600;color:#fff;}
+  .sidebar-footer .signout{font-size:11.5px;color:#8890a0;background:none;border:none;padding:0;cursor:pointer;}
+  .sidebar-footer .signout:hover{color:#fff;}
+
+  .main{
+    flex:1;
+    padding:44px 56px 60px 56px;
+    max-width:1180px;
+  }
+  .screen{display:none;}
+  .screen.active{display:block;animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .screen-header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:30px;flex-wrap:wrap;gap:16px;
+  }
+  .screen-header h1{font-size:28px;}
+  .screen-header .sub{color:var(--muted);font-size:14px;margin-top:4px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono';font-size:11px;letter-spacing:0.12em;
+    text-transform:uppercase;color:var(--pine);margin-bottom:8px;
+  }
+
+  /* ---------- ride cards ---------- */
+  .ride-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+    gap:18px;
+  }
+  .ride-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:var(--shadow);
+    transition:transform .15s, box-shadow .15s;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .ride-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(28,36,48,0.1);}
+  .driver-row{display:flex;align-items:center;gap:10px;}
+  .driver-row .name{font-weight:600;font-size:14.5px;}
+  .driver-row .avatar{width:32px;height:32px;font-size:12.5px;}
+  .route-block{
+    background:#FBF9F4;border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;display:flex;flex-direction:column;gap:8px;
+  }
+  .route-endpoint{display:flex;align-items:center;gap:10px;font-size:14px;}
+  .route-endpoint .lbl{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--muted);width:26px;flex-shrink:0;}
+  .route-vline{width:6px;height:16px;border-left:2px dashed var(--line);margin-left:3px;}
+  .meta-row{display:flex;justify-content:space-between;align-items:center;}
+  .meta-row .time{font-family:'IBM Plex Mono';font-size:13px;color:var(--ink-soft);}
+  .seats-badge{
+    font-family:'IBM Plex Mono';font-size:12px;font-weight:600;
+    padding:4px 10px;border-radius:999px;background:var(--pine);color:var(--pine-ink);
+  }
+  .seats-badge.full{background:#EFE9DC;color:#A9A292;}
+  .ride-card .notes{font-size:12.5px;color:var(--muted);font-style:italic;}
+
+  .empty-state{
+    text-align:center;padding:70px 20px;
+    border:1.5px dashed var(--line);border-radius:16px;
+    background:#FBF9F4;
+  }
+  .empty-state .logo-mark{margin:0 auto 18px auto;transform:scale(1.6);}
+  .empty-state h3{font-size:19px;margin-bottom:8px;}
+  .empty-state p{color:var(--muted);font-size:14px;margin:0 0 20px 0;}
+
+  /* ---------- post ride ---------- */
+  .form-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    box-shadow:var(--shadow);padding:36px;max-width:720px;
+  }
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;}
+  .form-grid .full{grid-column:1/-1;}
+  .confirm-banner{
+    display:none;align-items:center;gap:10px;
+    background:var(--pine);color:var(--pine-ink);
+    padding:12px 16px;border-radius:10px;font-size:13.5px;font-weight:600;
+    margin-bottom:20px;
+  }
+  .confirm-banner.show{display:flex;}
+
+  /* ---------- leaderboard ---------- */
+  .top-hero{
+    background:linear-gradient(135deg, var(--ink) 0%, #2A3444 100%);
+    color:#fff;border-radius:18px;padding:28px 32px;
+    display:flex;align-items:center;gap:22px;margin-bottom:22px;
+    position:relative;overflow:hidden;
+  }
+  .top-hero .crown{flex-shrink:0;}
+  .top-hero .rank{font-family:'IBM Plex Mono';font-size:12px;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;}
+  .top-hero h2{font-size:24px;color:#fff;margin:4px 0 2px 0;}
+  .top-hero .count{font-family:'IBM Plex Mono';font-size:14px;color:#C4C9D2;}
+  .top-hero .avatar{width:64px;height:64px;font-size:22px;border:3px solid var(--accent);}
+
+  .board-list{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+  .board-row{
+    display:flex;align-items:center;gap:16px;padding:15px 22px;
+    border-bottom:1px solid var(--line);
+  }
+  .board-row:last-child{border-bottom:none;}
+  .board-row .rank-num{font-family:'IBM Plex Mono';font-size:14px;color:var(--muted);width:22px;}
+  .board-row .name{flex:1;font-weight:500;font-size:14.5px;}
+  .board-row .rides-count{font-family:'IBM Plex Mono';font-size:13.5px;color:var(--pine);font-weight:600;}
+
+  /* ---------- profile ---------- */
+  .profile-top{display:flex;align-items:center;gap:22px;margin-bottom:30px;}
+  .profile-top .avatar{width:80px;height:80px;font-size:28px;}
+  .profile-name-block h2{font-size:22px;}
+  .profile-name-block .community{font-family:'IBM Plex Mono';font-size:12px;color:var(--pine);margin-top:4px;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:30px;max-width:640px;}
+  .stat-tile{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:18px;text-align:center;
+  }
+  .stat-tile .num{font-family:'IBM Plex Mono';font-size:26px;font-weight:600;color:var(--ink);}
+  .stat-tile .lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;}
+  .profile-form{max-width:520px;}
+  .view-toggle-row{display:flex;justify-content:flex-end;max-width:520px;margin-bottom:14px;}
+  .profile-form input:disabled{background:transparent;border-color:transparent;padding-left:0;color:var(--ink);}
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH VIEW ============ -->
+<div id="auth-view">
+  <div class="auth-shell">
+    <div class="auth-side">
+      <div>
+        <div class="auth-brand"><div class="logo-mark"></div><span>Rihla</span></div>
+      </div>
+      <div>
+        <div class="tag">Rihla — "journey"</div>
+        <h2 id="auth-side-copy">Free rides, shared by the people who live and work around you.</h2>
+        <p>No fares, no strangers — just neighbors getting each other where they're going.</p>
+      </div>
+      <div class="route-line-deco"></div>
+    </div>
+
+    <div class="auth-form-col">
+      <!-- Sign In -->
+      <div id="pane-signin">
+        <h1>Sign in to Rihla</h1>
+        <div class="sub">Pick up where your community left off.</div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="signin-email" placeholder="you@community.org">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="signin-password" placeholder="••••••••">
+        </div>
+        <div id="signin-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none;"></div>
+        <button class="btn btn-primary btn-block" id="signin-btn" onclick="doSignIn()">Sign in</button>
+        <div class="toggle-link">New here? <button onclick="switchAuth('signup')">Create an account</button></div>
+      </div>
+
+      <!-- Sign Up -->
+      <div id="pane-signup" class="hidden">
+        <h1>Create your account</h1>
+        <div class="sub">Takes under a minute — you'll join your community next.</div>
+        <div class="field">
+          <label>Full name</label>
+          <input type="text" id="signup-name" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="signup-email" placeholder="you@community.org">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="Create a password">
+        </div>
+        <div id="signup-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;display:none;"></div>
+        <button class="btn btn-primary btn-block" id="signup-btn" onclick="doSignUp()">Create account</button>
+        <div class="toggle-link">Already have an account? <button onclick="switchAuth('signin')">Sign in</button></div>
+      </div>
+
+      <!-- Community Code -->
+      <div id="pane-code" class="hidden">
+        <h1>Enter your community code</h1>
+        <div class="sub">This keeps rides inside your building, block, or campus — not open to strangers.</div>
+        <div class="field" id="code-field">
+          <label>Community code</label>
+          <input type="text" id="code-input" placeholder="e.g. CITYU-2026" style="text-transform:uppercase;">
+          <div class="error-msg">That code doesn't match a community. Check with your building or campus admin.</div>
+        </div>
+        <button class="btn btn-primary btn-block" id="verify-btn" onclick="verifyCode()">Verify code</button>
+        <div class="toggle-link mono" style="font-size:12px;">Try <b>CITYU-2026</b> for this app</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP VIEW ============ -->
+<div id="app-view">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="logo-mark"></div><span>Rihla</span></div>
+    <div class="community-pill" id="sidebar-community"></div>
+
+    <ul class="nav-list">
+      <li><button class="nav-item active" data-screen="home" onclick="showScreen('home')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        Home
+      </button></li>
+      <li><button class="nav-item" data-screen="post" onclick="showScreen('post')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        Post a Ride
+      </button></li>
+      <li><button class="nav-item" data-screen="leaderboard" onclick="showScreen('leaderboard')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21h16"/><path d="M6 21V9l6-5 6 5v12"/><path d="M9 21v-6h6v6"/></svg>
+        Leaderboard
+      </button></li>
+      <li><button class="nav-item" data-screen="profile" onclick="showScreen('profile')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        Profile
+      </button></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="avatar" id="sidebar-avatar"></div>
+      <div style="flex:1;">
+        <div class="who" id="sidebar-who"></div>
+        <button class="signout" onclick="signOut()">Sign out</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- HOME -->
+    <section class="screen active" id="screen-home">
+      <div class="screen-header">
+        <div>
+          <div class="eyebrow" id="home-eyebrow"></div>
+          <h1>Available rides</h1>
+          <div class="sub">Posted by people in your community, updated as they go.</div>
+        </div>
+        <button class="btn btn-primary" onclick="showScreen('post')">+ Post a ride</button>
+      </div>
+
+      <div class="ride-grid" id="ride-grid"></div>
+
+      <div class="empty-state hidden" id="empty-state">
+        <div class="logo-mark"></div>
+        <h3>No rides posted yet</h3>
+        <p>Be the first to offer one — someone nearby is probably headed the same way.</p>
+        <button class="btn btn-primary" onclick="showScreen('post')">Post the first ride</button>
+      </div>
+    </section>
+
+    <!-- POST A RIDE -->
+    <section class="screen" id="screen-post">
+      <div class="screen-header">
+        <div>
+          <div class="eyebrow">Offer a seat</div>
+          <h1>Post a ride</h1>
+          <div class="sub">Give a few details — neighbors will see it right away.</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="confirm-banner" id="post-confirm">&#10003; Ride posted — it's now visible on Home.</div>
+        <form onsubmit="return submitRide(event)">
+          <div class="form-grid">
+            <div class="field">
+              <label>Origin</label>
+              <input type="text" placeholder="e.g. Maple Court" required>
+            </div>
+            <div class="field">
+              <label>Destination</label>
+              <input type="text" placeholder="e.g. Downtown Station" required>
+            </div>
+            <div class="field">
+              <label>Date</label>
+              <input type="date" required>
+            </div>
+            <div class="field">
+              <label>Time</label>
+              <input type="time" required>
+            </div>
+            <div class="field">
+              <label>Seats available</label>
+              <input type="number" min="1" max="8" placeholder="3" required>
+            </div>
+            <div class="field">
+              <label>Notes (optional)</label>
+              <input type="text" placeholder="e.g. Leaving right after work">
+            </div>
+          </div>
+          <button class="btn btn-primary" type="submit" style="margin-top:8px;">Post ride</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section class="screen" id="screen-leaderboard">
+      <div class="screen-header">
+        <div>
+          <div class="eyebrow">This month</div>
+          <h1>Community Heroes</h1>
+          <div class="sub">The neighbors giving the most rides this month. Resets on the 1st.</div>
+        </div>
+      </div>
+
+      <div class="top-hero" id="lb-top-hero">
+        <svg class="crown" width="40" height="40" viewBox="0 0 24 24" fill="var(--accent)"><path d="M3 8l4 3 5-6 5 6 4-3-2 10H5L3 8z"/></svg>
+        <div class="avatar" id="lb-top-avatar" style="width:64px;height:64px;font-size:22px;"></div>
+        <div>
+          <div class="rank">#1 this month</div>
+          <h2 id="lb-top-name"></h2>
+          <div class="count" id="lb-top-count"></div>
+        </div>
+      </div>
+
+      <div class="board-list" id="board-list"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="screen" id="screen-profile">
+      <div class="screen-header">
+        <div>
+          <div class="eyebrow">Your account</div>
+          <h1>Profile</h1>
+        </div>
+      </div>
+
+      <div class="profile-top">
+        <div class="avatar" id="profile-avatar" style="width:80px;height:80px;font-size:28px;"></div>
+        <div class="profile-name-block">
+          <h2 id="profile-name-display"></h2>
+          <div class="community" id="profile-community-display"></div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-tile"><div class="num" id="stat-joined">—</div><div class="lbl">Rides joined</div></div>
+        <div class="stat-tile"><div class="num" id="stat-posted">—</div><div class="lbl">Rides posted</div></div>
+        <div class="stat-tile"><div class="num" id="stat-total">—</div><div class="lbl">Total rides</div></div>
+      </div>
+
+      <div class="view-toggle-row">
+        <button class="btn btn-outline" id="edit-toggle-btn" onclick="toggleEdit()">Edit profile</button>
+      </div>
+
+      <div class="form-card profile-form">
+        <div class="field">
+          <label>Full name</label>
+          <input type="text" disabled id="pf-name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" disabled id="pf-email">
+        </div>
+        <div class="field">
+          <label>About</label>
+          <input type="text" disabled id="pf-about" placeholder="A short bio (optional)">
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const API = 'http://127.0.0.1:8000';
+  let token = null;
+  let currentUser = null;
+
+  // ── API helper ──────────────────────────────────────────────────────────
+  async function api(method, path, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    if (body !== undefined) opts.body = JSON.stringify(body);
+    let res;
+    try {
+      res = await fetch(API + path, opts);
+    } catch {
+      throw { error: 'Cannot reach the server. Make sure the backend is running on port 8000.' };
+    }
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      signOut();
+      throw { status: 401, error: data.error || 'Session expired. Please sign in again.' };
+    }
+    if (!res.ok) throw { status: res.status, error: data.error || 'Something went wrong.' };
+    return data;
+  }
+
+  // ── Utilities ───────────────────────────────────────────────────────────
+  function getInitials(name) {
+    const parts = name.trim().split(/\s+/);
+    if (!parts.length) return '';
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function shortName(name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    return parts[0] + ' ' + parts[parts.length - 1][0] + '.';
+  }
+
+  function formatDateTime(date, time) {
+    const now  = new Date();
+    const pad  = n => String(n).padStart(2, '0');
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    const tmrw = new Date(now); tmrw.setDate(now.getDate() + 1);
+    const tmrwStr  = `${tmrw.getFullYear()}-${pad(tmrw.getMonth()+1)}-${pad(tmrw.getDate())}`;
+    let day;
+    if (date === todayStr)    day = 'Today';
+    else if (date === tmrwStr) day = 'Tomorrow';
+    else {
+      const [, m, d] = date.split('-');
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      day = `${parseInt(d)} ${months[parseInt(m) - 1]}`;
+    }
+    const [h, min] = time.split(':');
+    const hr = parseInt(h);
+    return `${day} \u00b7 ${hr % 12 || 12}:${min} ${hr >= 12 ? 'PM' : 'AM'}`;
+  }
+
+  // ── Auth flow ───────────────────────────────────────────────────────────
+  function switchAuth(which) {
+    document.getElementById('pane-signin').classList.toggle('hidden', which !== 'signin');
+    document.getElementById('pane-signup').classList.toggle('hidden', which !== 'signup');
+    document.getElementById('pane-code').classList.add('hidden');
+    document.getElementById('auth-side-copy').textContent = which === 'signup'
+      ? "Join in a minute — one profile, no separate driver or rider account."
+      : "Free rides, shared by the people who live and work around you.";
+  }
+
+  function goCommunityCode() {
+    document.getElementById('pane-signin').classList.add('hidden');
+    document.getElementById('pane-signup').classList.add('hidden');
+    document.getElementById('pane-code').classList.remove('hidden');
+    document.getElementById('auth-side-copy').textContent =
+      "One more step — tell us which community you're part of.";
+  }
+
+  async function doSignIn() {
+    const email    = document.getElementById('signin-email').value.trim();
+    const password = document.getElementById('signin-password').value;
+    const errEl    = document.getElementById('signin-error');
+    const btn      = document.getElementById('signin-btn');
+    errEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Signing in\u2026';
+    try {
+      const data = await api('POST', '/auth/login', { email, password });
+      token = data.token;
+      currentUser = data.user;
+      localStorage.setItem('rihla_token', token);
+      if (currentUser.community_id) { await enterApp(); }
+      else { goCommunityCode(); }
+    } catch (e) {
+      errEl.textContent = e.error || 'Sign in failed.';
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Sign in';
+    }
+  }
+
+  async function doSignUp() {
+    const name     = document.getElementById('signup-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const errEl    = document.getElementById('signup-error');
+    const btn      = document.getElementById('signup-btn');
+    errEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Creating account\u2026';
+    try {
+      const data = await api('POST', '/auth/register', { name, email, password });
+      token = data.token;
+      currentUser = data.user;
+      localStorage.setItem('rihla_token', token);
+      goCommunityCode();
+    } catch (e) {
+      errEl.textContent = e.error || 'Registration failed.';
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create account';
+    }
+  }
+
+  async function verifyCode() {
+    const field = document.getElementById('code-field');
+    const btn   = document.getElementById('verify-btn');
+    const val   = document.getElementById('code-input').value.trim().toUpperCase();
+    field.classList.remove('error');
+    btn.disabled = true; btn.textContent = 'Verifying\u2026';
+    try {
+      await api('POST', '/community/verify', { code: val });
+      await enterApp();
+    } catch {
+      field.classList.add('error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Verify code';
+    }
+  }
+
+  function signOut() {
+    token = null; currentUser = null;
+    localStorage.removeItem('rihla_token');
+    document.getElementById('app-view').classList.remove('active');
+    document.getElementById('auth-view').style.display = 'flex';
+    switchAuth('signin');
+  }
+
+  async function enterApp() {
+    const profile = await api('GET', '/users/me');
+    currentUser = { id: profile.id, name: profile.name, community_id: profile.community?.id };
+    // Sidebar
+    document.getElementById('sidebar-avatar').textContent    = getInitials(profile.name);
+    document.getElementById('sidebar-who').textContent       = shortName(profile.name);
+    const cname = profile.community?.name || '';
+    document.getElementById('sidebar-community').textContent = cname;
+    document.getElementById('home-eyebrow').textContent      = cname;
+    // Show app
+    document.getElementById('auth-view').style.display = 'none';
+    document.getElementById('app-view').classList.add('active');
+    showScreen('home');
+  }
+
+  // ── Navigation ──────────────────────────────────────────────────────────
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(b =>
+      b.classList.toggle('active', b.dataset.screen === name));
+    if (name === 'home')        loadRides();
+    if (name === 'leaderboard') loadLeaderboard();
+    if (name === 'profile')     loadProfile();
+  }
+
+  // ── Rides ───────────────────────────────────────────────────────────────
+  async function loadRides() {
+    try {
+      const rides = await api('GET', '/rides');
+      renderRides(rides);
+    } catch (e) { console.error('loadRides:', e); }
+  }
+
+  function renderRides(rides) {
+    const grid  = document.getElementById('ride-grid');
+    const empty = document.getElementById('empty-state');
+    if (!rides.length) {
+      grid.classList.add('hidden'); empty.classList.remove('hidden'); return;
+    }
+    grid.classList.remove('hidden'); empty.classList.add('hidden');
+    grid.innerHTML = rides.map(r => {
+      const own  = currentUser && r.driver.id === currentUser.id;
+      const full = r.status === 'full';
+      const seats = r.seats_available;
+      return `
+        <div class="ride-card">
+          <div class="driver-row">
+            <div class="avatar">${r.driver.initials}</div>
+            <div class="name">${r.driver.name}</div>
+          </div>
+          <div class="route-block">
+            <div class="route-endpoint">
+              <span class="lbl">FROM</span>
+              <div class="route-mark"><div class="dot origin"></div></div>
+              ${r.origin}
+            </div>
+            <div class="route-vline"></div>
+            <div class="route-endpoint">
+              <span class="lbl">TO</span>
+              <div class="route-mark"><div class="dot dest"></div></div>
+              ${r.destination}
+            </div>
+          </div>
+          <div class="meta-row">
+            <span class="time mono">${formatDateTime(r.date, r.time)}</span>
+            <span class="seats-badge ${full ? 'full' : ''}">
+              ${full ? 'Full' : seats + ' seat' + (seats !== 1 ? 's' : '') + ' left'}
+            </span>
+          </div>
+          ${r.notes ? `<div class="notes">"${r.notes}"</div>` : ''}
+          ${own
+            ? `<button class="btn btn-outline btn-block" onclick="cancelRide('${r.id}',this)">Cancel ride</button>`
+            : `<button class="btn ${full?'btn-outline':'btn-primary'} btn-block"
+                 ${full?'disabled':''} onclick="joinRide('${r.id}',this)">
+                 ${full ? 'Full' : 'Join ride'}
+               </button>`
+          }
+        </div>`;
+    }).join('');
+  }
+
+  async function joinRide(id, btn) {
+    btn.disabled = true; btn.textContent = 'Joining\u2026';
+    try {
+      await api('POST', `/rides/${id}/join`);
+      await loadRides();
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Join ride';
+      alert(e.error || 'Could not join this ride.');
+    }
+  }
+
+  async function cancelRide(id, btn) {
+    if (!confirm('Cancel this ride? All joined riders will be notified by email.')) return;
+    btn.disabled = true; btn.textContent = 'Cancelling\u2026';
+    try {
+      await api('DELETE', `/rides/${id}`);
+      await loadRides();
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Cancel ride';
+      alert(e.error || 'Could not cancel this ride.');
+    }
+  }
+
+  async function submitRide(e) {
+    e.preventDefault();
+    const inputs = e.target.querySelectorAll('input');
+    const btn    = e.target.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Posting\u2026';
+    try {
+      await api('POST', '/rides', {
+        origin:      inputs[0].value.trim(),
+        destination: inputs[1].value.trim(),
+        date:        inputs[2].value,
+        time:        inputs[3].value.substring(0, 5),
+        seats_total: parseInt(inputs[4].value),
+        notes:       inputs[5].value.trim() || null
+      });
+      const banner = document.getElementById('post-confirm');
+      banner.classList.add('show');
+      e.target.reset();
+      setTimeout(() => { banner.classList.remove('show'); showScreen('home'); }, 1100);
+    } catch (err) {
+      alert(err.error || 'Could not post ride.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Post ride';
+    }
+    return false;
+  }
+
+  // ── Leaderboard ─────────────────────────────────────────────────────────
+  async function loadLeaderboard() {
+    try {
+      const data     = await api('GET', '/leaderboard');
+      const rankings = data.rankings;
+      const heroEl   = document.getElementById('lb-top-hero');
+      if (!rankings.length) {
+        heroEl.style.display = 'none';
+        document.getElementById('board-list').innerHTML =
+          '<div class="board-row" style="justify-content:center;color:var(--muted);font-size:14px;padding:30px;">' +
+          'No rides given this month yet.</div>';
+        return;
+      }
+      heroEl.style.display = 'flex';
+      const top = rankings[0];
+      document.getElementById('lb-top-avatar').textContent = top.user.initials;
+      document.getElementById('lb-top-name').textContent   = top.user.name;
+      document.getElementById('lb-top-count').textContent  = top.riders_taken + ' riders taken';
+      document.getElementById('board-list').innerHTML = rankings.slice(1).map(b => `
+        <div class="board-row">
+          <span class="rank-num">#${b.rank}</span>
+          <div class="avatar" style="width:30px;height:30px;font-size:11px;">${b.user.initials}</div>
+          <span class="name">${b.user.name}</span>
+          <span class="rides-count">${b.riders_taken} rider${b.riders_taken !== 1 ? 's' : ''}</span>
+        </div>`).join('');
+    } catch (e) { console.error('loadLeaderboard:', e); }
+  }
+
+  // ── Profile ─────────────────────────────────────────────────────────────
+  async function loadProfile() {
+    try {
+      const data = await api('GET', '/users/me');
+      document.getElementById('pf-name').value  = data.name;
+      document.getElementById('pf-email').value = data.email;
+      document.getElementById('pf-about').value = data.about || '';
+      document.getElementById('stat-joined').textContent = data.stats.rides_joined;
+      document.getElementById('stat-posted').textContent = data.stats.rides_posted;
+      document.getElementById('stat-total').textContent  = data.stats.total_rides;
+      document.getElementById('profile-avatar').textContent           = getInitials(data.name);
+      document.getElementById('profile-name-display').textContent     = data.name;
+      document.getElementById('profile-community-display').textContent = data.community?.name || '';
+    } catch (e) { console.error('loadProfile:', e); }
+  }
+
+  let editing = false;
+  function toggleEdit() {
+    if (editing) { saveProfile(); return; }
+    editing = true;
+    document.getElementById('pf-name').disabled  = false;
+    document.getElementById('pf-about').disabled = false;
+    // pf-email intentionally stays disabled — not editable per spec
+    document.getElementById('edit-toggle-btn').textContent = 'Save changes';
+    document.getElementById('edit-toggle-btn').className   = 'btn btn-primary';
+  }
+
+  async function saveProfile() {
+    const name  = document.getElementById('pf-name').value.trim();
+    const about = document.getElementById('pf-about').value.trim();
+    const btn   = document.getElementById('edit-toggle-btn');
+    btn.disabled = true; btn.textContent = 'Saving\u2026';
+    try {
+      const data = await api('PATCH', '/users/me', { name, about });
+      editing = false;
+      document.getElementById('pf-name').disabled  = true;
+      document.getElementById('pf-about').disabled = true;
+      btn.textContent = 'Edit profile';
+      btn.className   = 'btn btn-outline';
+      // Sync sidebar + profile header
+      document.getElementById('sidebar-avatar').textContent    = getInitials(data.name);
+      document.getElementById('sidebar-who').textContent       = shortName(data.name);
+      document.getElementById('profile-avatar').textContent    = getInitials(data.name);
+      document.getElementById('profile-name-display').textContent = data.name;
+      if (currentUser) currentUser.name = data.name;
+    } catch (e) {
+      alert(e.error || 'Could not save profile.');
+    } finally {
+      btn.disabled = false;
+      if (editing) { btn.textContent = 'Save changes'; btn.className = 'btn btn-primary'; }
+    }
+  }
+
+  // ── Boot — auto-login if token exists in localStorage ───────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    const saved = localStorage.getItem('rihla_token');
+    if (!saved) return;
+    token = saved;
+    try {
+      const profile = await api('GET', '/users/me');
+      if (profile.community) { await enterApp(); }
+      else { goCommunityCode(); }
+    } catch {
+      token = null;
+      localStorage.removeItem('rihla_token');
+    }
+  });
+</script>
+</body>
+</html>
