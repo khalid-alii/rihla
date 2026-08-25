@@ -1,0 +1,46 @@
+BIT2083 Fundamental of Computational Thinking: Phython 
+SUSTAINABLE SOLUTIONS THROUGH COMPUTATIONAL 
+THINKING 
+ 
+Sustainability has become one of today's greatest global challenges. Communities 
+around the world face issues such as food waste, excessive energy consumption, 
+inefficient resource management, and increasing environmental impacts caused by 
+human activities. Although these challenges are global in nature, many can be 
+addressed 
+through 
+simple 
+technological 
+solutions 
+that 
+encourage 
+better 
+decision-making and responsible resource usage. 
+ 
+In this project, students will apply Computational Thinking concepts and Python 
+programming to develop a console-based application that addresses a real-world 
+sustainability problem aligned with one of the selected Sustainable Development 
+Goals (SDGs). The application should assist users in making informed decisions, 
+performing useful calculations, or managing information that contributes to a more 
+sustainable lifestyle or community. 
+ 
+Students are expected to demonstrate the use of decomposition, pattern recognition, 
+abstraction, algorithm design, and problem-solving techniques while developing a 
+functional Python application using the programming concepts learned throughout 
+the semester. 
+ 
+ 
+TASK DESCRIPTION 
+ 
+Each group is required to select ONE (1) of the following Sustainable Development 
+Goals (SDGs): 
+1.​ SDG 2: Zero Hunger 
+2.​ SDG 7: Affordable and Clean Energy 
+3.​ SDG 11: Sustainable Cities and Communities 
+4.​ SDG 13: Climate Action 
+Based on the selected SDG, identify a real-world problem that can be solved through 
+a simple Python console application. The proposed solution should demonstrate 
+computational thinking principles and utilise Python programming concepts learned 
+in this course.The selected SDG(s) should be clearly identified and justified in the 
+project report. 
+ 
+ 

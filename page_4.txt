@@ -1,0 +1,33 @@
+BIT2083 Fundamental of Computational Thinking: Phython 
+Code Quality 
+Comments, 
+indentation, 
+naming 
+conventions and 
+readability 
+10% 
+Poor quality 
+Limited 
+readability 
+Acceptable 
+Well organized 
+Professional 
+coding standards 
+Demonstration 
+& Presentation 
+System 
+demonstration, 
+explanation and 
+ability to answer 
+questions 
+5% 
+Unable to explain 
+Limited 
+understanding 
+Basic explanation 
+Good explanation 
+Excellent 
+demonstration 
+and confident 
+explanation 
+ 
