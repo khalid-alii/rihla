@@ -1,6 +1,6 @@
-# 🚗 Rihla — Community Ride-Sharing
+# Rihla — Community Ride-Sharing
 
-> *Rihla* (Arabic for "Journey") is a community-scoped carpooling web app built for university campuses. It supports **SDG 11: Sustainable Cities and Communities** by reducing single-occupancy vehicle commutes.
+> *Rihla* (Arabic for "Journey") is a community-scoped carpooling web app. It supports **SDG 11: Sustainable Cities and Communities** by reducing single-occupancy vehicle commutes.
 
 **Live App:** https://rihla-eosin.vercel.app  
 **API Docs:** https://rihla-api-n289.onrender.com/docs
@@ -19,16 +19,16 @@
 
 ## Features
 
-- 🔐 JWT authentication with bcrypt password hashing
-- 🏘️ Community-gated access via unique codes (e.g. `CITYU-2026`)
-- 🚘 Post, join, and cancel rides in real-time
-- 🏆 Monthly leaderboard ranked by carpooling activity
-- 🔒 Concurrency-safe seat booking (no double-booking)
-- 📧 Email notifications when a ride is cancelled
+-  JWT authentication with bcrypt password hashing
+-  Community-gated access via unique codes (e.g. `CITYU-2026`)
+-  Post, join, and cancel rides in real-time
+-  Monthly leaderboard ranked by carpooling activity
+-  Concurrency-safe seat booking (no double-booking)
+-  Email notifications when a ride is cancelled
 
 ---
 
-## Local Setup (For Teammates)
+## Local Setup
 
 ### Prerequisites
 - Python 3.11+
